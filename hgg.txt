@@ -1,0 +1,235 @@
+const express = require('express');
+const router = express.Router();
+const chaffaire = require('../models/chaffaire');
+const multer = require('multer');
+const excelToJson =require('convert-excel-to-json')
+const fs =require('fs-extra')
+
+
+var upload = multer({ dest: 'uploads/' });
+
+
+router.post('/upload',upload.single('file'), async (req, res) => {
+  try {
+      if(req.file?.filename==null || req.file?.filename == 'undefined'){
+          res.status(400).json('no file')
+      }else{
+        var filePath ='uploads/'+req.file.filename;
+
+        const excelData=excelToJson({
+          sourceFile:filePath,
+          header:{
+            rows:1,
+          },
+          columnToKey:{
+            '*':'{{columnHeader}}'
+          }
+        });
+        fs.remove(filePath)
+        res.status(200).json(excelData);
+
+      }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+module.exports = router;
+
+
+
+
+oneSchema.pre("save", function (next) {
+  const percentageDifference =
+    ((this.prixmonth1year2022 - this.prixmonth1year2021) /
+      this.prixmonth1year2021) *
+    100;
+
+  if (percentageDifference < 0) {
+    this.col4 = percentageDifference;
+  } else {
+    this.col4 = "+" + percentageDifference;
+  }
+
+  next();
+});
+
+
+
+// Create a new "one" document
+app.post("/ones", async (req, res) => {
+  try {
+    const one = new One(req.body);
+    await one.save();
+    res.status(201).send(one);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+// Get all "one" documents
+app.get("/ones", async (req, res) => {
+  try {
+    const ones = await One.find({});
+    res.send(ones);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+// Get a single "one" document by ID
+app.get("/ones/:id", async (req, res) => {
+  try {
+    const one = await One.findById(req.params.id);
+    if (!one) {
+      return res.status(404).send();
+    }
+    res.send(one);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+// Update a "one" document by ID
+app.patch("/ones/:id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["type", "prixmonth1year2021", "prixmonth1year2022"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid updates" });
+  }
+
+  try {
+    const one = await One.findById(req.params.id);
+    if (!one) {
+     
+const express = require("express");
+const mongoose = require("mongoose");
+const xlsx = require("xlsx"); // require the 'xlsx' library
+
+const app = express();
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect("mongodb://localhost/mydatabase", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", function () {
+  console.log("Connected to MongoDB");
+});
+
+// Define the schema for your "one" collection
+const oneSchema = new mongoose.Schema({
+  type: String,
+  prixmonth1year2021: Number,
+  prixmonth1year2022: Number,
+  col4: Number,
+});
+
+// Define a pre-save hook on the oneSchema that calculates the percentage difference between col2 and col3 and sets the value of col4 accordingly
+oneSchema.pre("save", function (next) {
+  const percentageDifference =
+    ((this.prixmonth1year2022 - this.prixmonth1year2021) /
+      this.prixmonth1year2021) *
+    100;
+
+  if (percentageDifference < 0) {
+    this.col4 = percentageDifference;
+  } else {
+    this.col4 = "+" + percentageDifference;
+  }
+
+  next();
+});
+
+// Create a model based on the oneSchema
+const One = mongoose.model("One", oneSchema);
+
+// Create an API endpoint that accepts data in Excel format and saves it to the MongoDB database
+app.post("/ones", async (req, res) => {
+  try {
+    const workbook = xlsx.read(req.body); // read the Excel file from the request body
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = xlsx.utils.sheet_to_json(worksheet); // convert the worksheet to JSON format
+    const ones = data.map((row) => new One(row)); // create a new "One" instance for each row of data
+
+    await One.insertMany(ones); // save all the "One" instances to the database
+    res.status(201).send(ones);
+  } catch (err) {
+    console.log(err);
+    res.status(400).send(err);
+  }
+});
+
+// Get all "one" documents
+app.get("/ones", async (req, res) => {
+  try {
+    const ones = await One.find({});
+    res.send(ones);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+// Get a single "one" document by ID
+app.get("/ones/:id", async (req, res) => {
+  try {
+    const one = await One.findById(req.params.id);
+    if (!one) {
+      return res.status(404).send();
+    }
+    res.send(one);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+// Update a "one" document by ID
+app.patch("/ones/:id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["type", "prixmonth1year2021", "prixmonth1year2022"];
+  const isValidOperation = updates.every((update)
+
+
+
+
+import React, { useState } from "react";
+import axios from "axios";
+
+function UploadForm() {
+  const [file, setFile] = useState(null);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await axios.post("http://localhost:3000/ones", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      alert("File uploaded successfully");
+    } catch (err) {
+      console.log(err);
+      alert("File upload failed");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+      <button type="submit">Upload</button>
+    </form>
+  );
+}
